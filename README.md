@@ -8,6 +8,7 @@ To use this you will need to download gitbash and then connect to this
 4. Hit enter and TADA! 
 
 Daily Use
+
 1. Open git bash
 2. Move directory to your repository
 3. Open github
