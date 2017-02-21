@@ -20,3 +20,4 @@ Git Bash Commands:
 'git add .' -will add ALL changes you have made and stage them to be commited to the version control
 'git commit -m 'type an update comment' ' -will commit all your changes to your local files
 'git push' -will ask you for your GitHub login info, and then will send your changes to the cloud for everyone to see
+
