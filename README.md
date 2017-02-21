@@ -16,8 +16,8 @@ Daily Use
 5. In git bash type: git fetch && git checkout 'your first name'
 
 Git Bash Commands:
-'git status' -will tell you how many files you have changed and what changes need to be added to version control
-'git add .' -will add ALL changes you have made and stage them to be commited to the version control
-'git commit -m 'type an update comment' ' -will commit all your changes to your local files
+'git status' -will tell you how many files you have changed and what changes need to be added to version control \n
+'git add .' -will add ALL changes you have made and stage them to be commited to the version control \n
+'git commit -m 'type an update comment' ' -will commit all your changes to your local files \n
 'git push' -will ask you for your GitHub login info, and then will send your changes to the cloud for everyone to see
 
