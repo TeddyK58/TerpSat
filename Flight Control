@@ -3,15 +3,18 @@
 #include <SSC.h>
 #include "Adafruit_MCP9808.h"
 
-SoftwareSerial Xbee(Rx, Tx); //whatever the RX and TX is for the ballonduino, unsure currently
-SSC ssc(0x28, 255); //whatever pin powers the ssc sensor, also creation of SSC object in code
-int i;  //packet counter
-int time;  //time since on counter
+SoftwareSerial Xbee(Rx, Tx);                           //whatever the RX and TX is for the ballonduino, unsure currently
+SSC ssc(0x28, 255);                                   //whatever pin powers the ssc sensor, also creation of SSC object in code
+int i;                                               //packet counter
+int time;                                           //time since on counter
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();  //Creation of MCP9808 object
 
 void setup() {
   XBEE.begin(9600);  //setting baud rate for xbee, make sure it's the correct settings
-  
+   if (!tempsensor.begin()) {
+    Serial.println("Couldn't find MCP9808!");
+    
+   }
   ssc.setMinRaw(0); //check data sheet for actual correct settings, just basic format here
   ssc.setMaxRaw(16383);
   ssc.setMinPressure(0.0);
