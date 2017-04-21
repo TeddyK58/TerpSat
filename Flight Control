@@ -8,7 +8,18 @@
 #include <Adafruit_BNO055.h>
 #include <Adafruit_Sensor.h>
 #include <utility/imumaths.h>
+#include <Adafruit_GPS.h>
 
+#define GPSSerial Serial1
+
+// Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
+// Set to 'true' if you want to debug and listen to the raw GPS sentences
+#define GPSECHO false
+
+// Connect to the GPS on the hardware port
+Adafruit_GPS GPS(&GPSSerial);
+
+uint32_t timer = millis();
 
 SoftwareSerial Xbee(Rx, Tx);                          //whatever the RX and TX is for the ballonduino, unsure currently
 SSC ssc(0x28, 255);     /                              /whatever pin powers the ssc sensor, also creation of SSC object in code
@@ -37,6 +48,11 @@ void setup() {
   ssc.start();
   
   bno.setExtCrystalUse(true);
+
+  // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
+  Serial.begin(115200);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY)
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
 }
 
 void loop() {
@@ -51,5 +67,39 @@ void loop() {
   float magy = mag.y();
   float magz = mag.z();
   
+  char c = GPS.read();
+
+  if (GPS.newNMEAreceived()) {
+    Serial.println(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    GPS.parse(GPS.lastNMEA()) // this also sets the newNMEAreceived() flag to false
+  }
   
+  if (timer > millis()) timer = millis();
+
+  //for now, everything is printed to serial
+  //we will need to store this somehow
+  if (millis() - timer > 2000) {
+    timer = millis(); // reset the timer
+    Serial.print("\nTime: ");
+    Serial.print(GPS.hour, DEC); Serial.print(':');
+    Serial.print(GPS.minute, DEC); Serial.print(':');
+    Serial.print(GPS.seconds, DEC); Serial.print('.');
+    Serial.println(GPS.milliseconds);
+    Serial.print("Date: ");
+    Serial.print(GPS.day, DEC); Serial.print('/');
+    Serial.print(GPS.month, DEC); Serial.print("/20");
+    Serial.println(GPS.year, DEC);
+    Serial.print("Fix: "); Serial.print((int)GPS.fix);
+    Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
+    if (GPS.fix) {
+      Serial.print("Location: ");
+      Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
+      Serial.print(", ");
+      Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
+      Serial.print("Speed (knots): "); Serial.println(GPS.speed);
+      Serial.print("Angle: "); Serial.println(GPS.angle);
+      Serial.print("Altitude: "); Serial.println(GPS.altitude);
+      Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
+    }
+  }
 }
