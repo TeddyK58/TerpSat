@@ -1,0 +1,8 @@
+Objectives:
+1. Figure out how to read in data from Balloonduino sensors
+2. Figure out how to assign that data to variables
+3. Figure out how to send that data to the XBEE
+4. Get the XBEE to transmit
+5. Flight software: Conditional statements
+6. Flight Software: Activating launch servo
+7. Flight Software: Activating Audio beacon
