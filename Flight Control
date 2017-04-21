@@ -2,15 +2,28 @@
 #include <Wire.h>
 #include <SSC.h>
 #include "Adafruit_MCP9808.h"
+#include "Balloonduino_lib.h"
+#include <Adafruit_BNO055.h>
+#include <Adafruit_Sensor.h>
+#include <utility/imumaths.h>
 
-SoftwareSerial Xbee(Rx, Tx);                           //whatever the RX and TX is for the ballonduino, unsure currently
-SSC ssc(0x28, 255);                                   //whatever pin powers the ssc sensor, also creation of SSC object in code
-int i;                                               //packet counter
-int time;                                           //time since on counter
-Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();  //Creation of MCP9808 object
+
+SoftwareSerial Xbee(Rx, Tx);                          //whatever the RX and TX is for the ballonduino, unsure currently
+SSC ssc(0x28, 255);     /                              /whatever pin powers the ssc sensor, also creation of SSC object in code
+Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();     //Creation of MCP9808 object
+Adafruit_BNO055 bno = Adafruit_BNO055(55);     //55 is a place holder, whatever pin is actually the BNO is used here
 
 void setup() {
-  XBEE.begin(9600);  //setting baud rate for xbee, make sure it's the correct settings
+  XBEE.begin(9600);   //setting baud rate for xbee, make sure it's the correct settings
+  XBEE_serial.begin(9600);
+  SPI.begin();
+  pinMode(53,OUTPUT);
+  if (!SD.begin(53)) {
+    serial.println("SD Card NOT detected.");
+  }
+  else{
+    serial.println("SD Card detected!");
+  }
    if (!tempsensor.begin()) {
     Serial.println("Couldn't find MCP9808!");
     
@@ -20,16 +33,21 @@ void setup() {
   ssc.setMinPressure(0.0);
   ssc.setMaxPressure(15);
   ssc.start();
-  i=0;
-  //for time, there is a way to keep accurate measurements within the ballonduino just unsure as of now
   
+  bno.setExtCrystalUse(true);
 }
 
 void loop() {
   ssc.update();
-  ssc.pressure();
+  float pressure = ssc.pressure();
   tempsensor.shutdown_wake(0);
   float c = tempsensor.readTempC();
   float f = (c*9.0/5.0)+32;
+  
+  imu::Vector<3> mag = bno.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);  //magnetometier vectors in uT
+  float magx = mag.x();
+  float magy = mag.y();
+  float magz = mag.z();
+  
   
 }
