@@ -23,17 +23,17 @@ Adafruit_GPS GPS(&GPSlogFile);
 
 uint32_t timer = millis();
 
-//SoftwarelogFile Xbee(Rx, Tx);                          //whatever the RX and TX is for the ballonduino, unsure currently
-SSC ssc(0x28, 255);     /                              /whatever pin powers the ssc sensor, also creation of SSC object in code
+//SoftwarelogFile Xbee(Rx, Tx);                       //whatever the RX and TX is for the ballonduino, unsure currently
+SSC ssc(0x28, 255);                                   //whatever pin powers the ssc sensor, also creation of SSC object in code
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();     //Creation of MCP9808 object
-Adafruit_BNO055 bno = Adafruit_BNO055(55);     //55 is a place holder, whatever pin is actually the BNO is used here
+Adafruit_BNO055 bno = Adafruit_BNO055(55);            //55 is a place holder, whatever pin is actually the BNO is used here
 
 void setup() {
-  //XBEE.begin(9600);   //setting baud rate for xbee, make sure it's the correct settings
+  //XBEE.begin(9600);   setting baud rate for xbee, make sure it's the correct settings
   //XBEE_logFile.begin(9600);
   Serial.begin(115200);
   SPI.begin();
-  pinMode(53,OUTPUT);
+  pinMode(53,OUTPUT);  
   if (!SD.begin(53)) {
     Serial.println("SD Card NOT detected.");
   }
@@ -64,6 +64,7 @@ void setup() {
 void loop() {
   ssc.update();
   float pressure = ssc.pressure();
+  
   tempsensor.shutdown_wake(0);
   float c = tempsensor.readTempC();
   float f = (c*9.0/5.0)+32;
@@ -76,8 +77,8 @@ void loop() {
   char c = GPS.read();
 
   if (GPS.newNMEAreceived()) {
-    // logFile.println(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
-    GPS.parse(GPS.lastNMEA()) // this also sets the newNMEAreceived() flag to false
+    // logFile.println(GPS.lastNMEA());       this also sets the newNMEAreceived() flag to false
+    GPS.parse(GPS.lastNMEA())                 this also sets the newNMEAreceived() flag to false
   }
   
   if (timer > millis()) timer = millis();
@@ -105,5 +106,17 @@ void loop() {
       logFile.print("Altitude: "); logFile.println(GPS.altitude);
       logFile.print("Satellites: "); logFile.println((int)GPS.satellites);
     }
+   logFile.print("Pressure: ");
+   logFile.println(pressure);
+   logFile.print("Temperature in C: ")
+   logFile.println(c);
+   logFile.print("Temperature in f: ")
+   logFile.println(f);
+   logFile.print("Magnetometer X: ");
+   logFile.println(magx);
+   logFile.print("Magnetometer Y: ");
+   logFile.println(magy);
+   logFile.print("Magnetometer Z: ");
+   logFile.println(magZ);
   }
 }
