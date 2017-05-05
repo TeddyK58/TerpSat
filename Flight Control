@@ -20,6 +20,7 @@ int Vout;
 float offset;
 float pitotpressure;
 float velocity;
+float density;
 
 void setup() {
   Serial.begin(115200);
@@ -61,10 +62,11 @@ void setup() {
 void loop() {
   ssc.update();
   float pressure = ssc.pressure();
-  
+  pressure = pressure*6.89476;
   tempsensor.shutdown_wake(0);
   float c = tempsensor.readTempC();
   float f = (c*9.0/5.0)+32;
+  density = pressure/(.287*(c+273));
   
   imu::Vector<3> mag = bno.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);  //magnetometier vectors in uT
   float magx = mag.x();
@@ -74,9 +76,10 @@ void loop() {
   Vout = (5*sensorval)/1024;
   pitotpressure = Vout - 2.5;
   pitotpressure = pitotpressure*1000;
+  velocity = sqrt(2*pitotpressure/(density));
   
 
-   logFile.print("Pressure: ");
+   logFile.print("Pressure in psi: ");
    logFile.println(pressure);
    logFile.print("Temperature in C: ")
    logFile.println(c);
@@ -88,5 +91,13 @@ void loop() {
    logFile.println(magy);
    logFile.print("Magnetometer Z: ");
    logFile.println(magZ);
+   logFile.print("Density in kg/m^3: ");
+   logFile.println(density);
+   logFile.print("Pitot tube pressure in KPa: ");
+   logFile.println(pitotpressure);
+   logFile.print("Velocity of cansat in m/s: ");
+   logFile.println(velocity);
+   logFile.println(" ");
+   
   }
 }
