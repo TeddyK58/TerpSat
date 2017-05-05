@@ -1,5 +1,3 @@
-
-
 #include <SoftwarelogFile.h>  
 #include <Wire.h>
 #include <SSC.h>
@@ -12,25 +10,18 @@
 #include <SD.h>
 #include <SPI.h>
 
-#define GPSlogFile logFile1
 
-// Set GPSECHO to 'false' to turn off echoing the GPS data to the logFile console
-// Set to 'true' if you want to debug and listen to the raw GPS sentences
-#define GPSECHO false
-
-// Connect to the GPS on the hardware port
-Adafruit_GPS GPS(&GPSlogFile);
-
-uint32_t timer = millis();
-
-//SoftwarelogFile Xbee(Rx, Tx);                       //whatever the RX and TX is for the ballonduino, unsure currently
 SSC ssc(0x28, 255);                                   //whatever pin powers the ssc sensor, also creation of SSC object in code
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();     //Creation of MCP9808 object
 Adafruit_BNO055 bno = Adafruit_BNO055(55);            //55 is a place holder, whatever pin is actually the BNO is used here
+int pitotpin = A1;
+int sensorval;
+int Vout;
+float offset;
+float pitotpressure;
+float velocity;
 
 void setup() {
-  //XBEE.begin(9600);   setting baud rate for xbee, make sure it's the correct settings
-  //XBEE_logFile.begin(9600);
   Serial.begin(115200);
   SPI.begin();
   pinMode(53,OUTPUT);  
@@ -43,7 +34,9 @@ void setup() {
   
   //should probably close this somehwere, but I'm not sure where
   logFile = SD.open("log.txt", FILE_WRITE);
-
+  pinMode(pitotpin, INPUT);
+  sensorval = 0;
+  
   if (!tempsensor.begin()) {
     logFile.println("Couldn't find MCP9808!");
     
@@ -56,9 +49,13 @@ void setup() {
   
   bno.setExtCrystalUse(true);
 
-  // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY)
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ); // 1 Hz update rate
+ int i = 0;
+ int sum = 0;
+ for(i=0;i<10;i++)  {
+         sensorval = analogRead(upsensorPin)-512;
+         sum+=upsensorValue;
+    }
+ offset = sum/10;
 }
 
 void loop() {
@@ -73,39 +70,12 @@ void loop() {
   float magx = mag.x();
   float magy = mag.y();
   float magz = mag.z();
+  sensorval = analogRead(pitotpin) - offset;
+  Vout = (5*sensorval)/1024;
+  pitotpressure = Vout - 2.5;
+  pitotpressure = pitotpressure*1000;
   
-  char c = GPS.read();
 
-  if (GPS.newNMEAreceived()) {
-    // logFile.println(GPS.lastNMEA());       this also sets the newNMEAreceived() flag to false
-    GPS.parse(GPS.lastNMEA())                 this also sets the newNMEAreceived() flag to false
-  }
-  
-  if (timer > millis()) timer = millis();
-
-  if (millis() - timer > 2000) {
-    timer = millis(); // reset the timer
-    logFile.print("\nTime: ");
-    logFile.print(GPS.hour, DEC); logFile.print(':');
-    logFile.print(GPS.minute, DEC); logFile.print(':');
-    logFile.print(GPS.seconds, DEC); logFile.print('.');
-    logFile.println(GPS.milliseconds);
-    logFile.print("Date: ");
-    logFile.print(GPS.day, DEC); logFile.print('/');
-    logFile.print(GPS.month, DEC); logFile.print("/20");
-    logFile.println(GPS.year, DEC);
-    logFile.print("Fix: "); logFile.print((int)GPS.fix);
-    logFile.print(" quality: "); logFile.println((int)GPS.fixquality);
-    if (GPS.fix) {
-      logFile.print("Location: ");
-      logFile.print(GPS.latitude, 4); logFile.print(GPS.lat);
-      logFile.print(", ");
-      logFile.print(GPS.longitude, 4); logFile.println(GPS.lon);
-      logFile.print("Speed (knots): "); logFile.println(GPS.speed);
-      logFile.print("Angle: "); logFile.println(GPS.angle);
-      logFile.print("Altitude: "); logFile.println(GPS.altitude);
-      logFile.print("Satellites: "); logFile.println((int)GPS.satellites);
-    }
    logFile.print("Pressure: ");
    logFile.println(pressure);
    logFile.print("Temperature in C: ")
